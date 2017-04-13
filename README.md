@@ -1,8 +1,8 @@
 ## Features
-- completion for `ansible-deploy`
-- completion for `ansible-role`
-- completion for `ansible-site`
-- completion for hosts from inventory
+- completion for `ansible-deploy` (playbooks, `--limit`)
+- completion for `ansible-role` (playbooks, `--limit`)
+- completion for `ansible-site` (host/site)
+- completion for groups and hosts from inventory `hosts_all`
 
 
 
