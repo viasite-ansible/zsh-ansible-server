@@ -1,24 +1,36 @@
 # hosts/groups completion from https://github.com/zsh-users/zsh-completions/blob/master/src/_ansible-playbook
 
+ANSIBLE_SERVER_PATH="${ANSIBLE_SERVER_PATH:-.}"
+
+__as_not_found_msg () {
+    echo 'Define $ANSIBLE_SERVER_PATH or use from ansible-server root'
+}
+
 __as_ll_group_list () {
-  # parses the ini hostfile for groups only: [...]
-  HOST_FILE=hosts_all
+    # parses the ini hostfile for groups only: [...]
+    HOST_FILE="${ANSIBLE_SERVER_PATH}/hosts_all"
+    if [ ! -e "$HOST_FILE" ]; then
+        return
+    fi
 
-  local -a group_list
-  group_list=$(command \
-      cat ${HOST_FILE} \
-      | awk '$1 ~ /^\[.*\]$/ && !/=/ && !/:vars/ \
-        { gsub(/[\[\]]/, "", $1); gsub(/:children/, "", $1) ; print $1 }' \
-      | uniq )
+    local -a group_list
+    group_list=$(command \
+        cat ${HOST_FILE} \
+        | awk '$1 ~ /^\[.*\]$/ && !/=/ && !/:vars/ \
+          { gsub(/[\[\]]/, "", $1); gsub(/:children/, "", $1) ; print $1 }' \
+        | uniq )
 
-  echo ${group_list}
+    echo ${group_list}
 }
 
 __as_host_list ()
 {
     # parses the ini hostfile for hosts only
     # but then has to remove all group occurrences
-    HOST_FILE=hosts_all
+    HOST_FILE="${ANSIBLE_SERVER_PATH}/hosts_all"
+    if [ ! -e "$HOST_FILE" ]; then
+        return
+    fi
     
     # this will also contain groups if they are referenced in other groups
     local -a mixed_host_list
@@ -38,11 +50,6 @@ __as_host_list ()
         )
     
     _wanted application expl 'hosts' compadd ${host_list}
-    
-    # method that delegates to ansible (slow)
-    # _wanted application expl 'hosts' compadd $(command ansible \
-    #                                             all --list-hosts\
-    #                                             2>/dev/null)
 }
 
 __as_group_list ()
@@ -62,9 +69,16 @@ _ansible_deploy_complete () {
             _arguments '*:feature:__as_group_list'
             ;;
         deploy)
-            local -a deploy
-            deploy=$(find playbooks/deploy -name '*.yml' | sed 's/playbooks\/deploy\///g' | sed 's/\.yml$//g')
-            compadd "$@" $(echo "$deploy")
+            local -a results
+            _message -r "$(__as_not_found_msg)"
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/playbooks/deploy"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=$(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g')
+                compadd "$@" $(echo "$results")
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
             ;;
     esac
 }
@@ -78,11 +92,18 @@ _ansible_role_complete () {
         pattern)
             _arguments '*:feature:__as_host_list'
             _arguments '*:feature:__as_group_list'
+            _message -r "$(__as_not_found_msg)"
             ;;
         roles)
-            local -a roles
-            roles=$(find playbooks/roles -name '*.yml' | sed 's/playbooks\/roles\///g' | sed 's/\.yml$//g')
-            compadd "$@" $(echo "$roles")
+            local -a results
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/playbooks/roles"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=$(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g')
+                compadd "$@" $(echo "$results")
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
             ;;
     esac
 }
@@ -93,10 +114,16 @@ _ansible_site_complete () {
 
     case "$state" in
         sites)
-            local -a sites
-            sites=$(find vars/sites/hosts -name '*.yml' | sed 's/vars\/sites\/hosts\///g' | sed 's/\.yml$//g')
-            #_multi_parts / sites
-            compadd "$@" $(echo "$sites")
+            local -a results
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/sites/hosts"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=$(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g')
+                #_multi_parts / sites
+                compadd "$@" $(echo "$results")
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
             ;;
     esac
 }

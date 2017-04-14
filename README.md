@@ -18,3 +18,16 @@ antigen bundle viasite-ansible/zsh-ansible-server
 git clone https://github.com/viasite-ansible/zsh-ansible-server.git ~/.oh-my-zsh/custom/plugins/ansible-server
 ```
 And add `ansible-server` to `plugins` in `.zshrc`.
+
+
+
+## Configure
+By default you should execute scripts from `ansible-server` root:
+```
+scripts/ansible-deploy zsh
+```
+
+If you want to execute scripts from anywhere, you must define `ANSIBLE_SERVER_PATH` variable:
+```
+export ANSIBLE_SERVER_PATH="/path/to/ansible-server"
+```
