@@ -128,6 +128,26 @@ _ansible_site_complete () {
     esac
 }
 
+_ansible_sites_foreach_complete () {
+    _arguments -C \
+    "1:first_arg:->groups"
+
+    case "$state" in
+        groups)
+            local -a results
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/sites/hosts"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=$(find "$playbooks_path" -type d -mindepth 1 | sed "s/$playbooks_path_sed//g")
+                compadd "$@" $(echo "all $results")
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
+            ;;
+    esac
+}
+
 compdef _ansible_deploy_complete ansible-deploy
 compdef _ansible_role_complete ansible-role
 compdef _ansible_site_complete ansible-site
+compdef _ansible_sites_foreach_complete sites-foreach
