@@ -1,7 +1,8 @@
 ## Features
 - completion for `ansible-deploy` (playbooks, `--limit`)
 - completion for `ansible-role` (playbooks, `--limit`)
-- completion for `ansible-site` (host/site)
+- completion for `ansible-site` (host/site) - expands `se/gr/si` to `server/group/site`
+- completion for `sites-foreach` (group/site) - expands `se/gr` to `server/group` 
 - completion for groups and hosts from inventory `hosts_all`
 
 
