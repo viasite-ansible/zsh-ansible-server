@@ -153,3 +153,8 @@ compdef _ansible_deploy_complete ansible-deploy
 compdef _ansible_role_complete ansible-role
 compdef _ansible_site_complete ansible-site
 compdef _ansible_sites_foreach_complete sites-foreach
+
+alias adeploy=ansible-deploy
+alias arole=ansible-role
+alias asite=ansible-site
+alias aforeach=sites-foreach
