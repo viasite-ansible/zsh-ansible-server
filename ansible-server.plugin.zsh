@@ -49,13 +49,13 @@ __as_host_list ()
         | paste -s -d ' ' - )
         )
     
-    _wanted application expl 'hosts' compadd ${host_list}
+    _wanted application expl 'hosts' _values -s , ${host_list}
 }
 
 __as_group_list ()
 {
     gl=($(command echo $(__as_ll_group_list) | paste -s -d ' ' - )) # 'a\nb\nc' -> (a b c)
-    _wanted application2 expl 'groups' compadd $gl
+    _wanted application2 expl 'groups' _values -s , $gl
 }
 
 _ansible_deploy_complete () {
@@ -92,7 +92,6 @@ _ansible_role_complete () {
         pattern)
             _arguments '*:feature:__as_host_list'
             _arguments '*:feature:__as_group_list'
-            _message -r "$(__as_not_found_msg)"
             ;;
         roles)
             local -a results
