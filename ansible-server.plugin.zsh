@@ -58,6 +58,27 @@ __as_group_list ()
     _wanted application2 expl 'groups' _values -s , $gl
 }
 
+# completion of playbooks/hosts/*
+_ansible_hosts_complete () {
+    _arguments -C \
+    "1:first_arg:->hosts" \
+
+    case "$state" in
+        hosts)
+            local -a results
+            _message -r "$(__as_not_found_msg)"
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/playbooks/hosts"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=( $(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g') )
+                _values 'results' $results
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
+            ;;
+    esac
+}
+
 _ansible_deploy_complete () {
     _arguments -C \
     "1:first_arg:->deploy" \
@@ -148,11 +169,13 @@ _ansible_sites_foreach_complete () {
     esac
 }
 
+compdef _ansible_hosts_complete ansible-host
 compdef _ansible_deploy_complete ansible-deploy
 compdef _ansible_role_complete ansible-role
 compdef _ansible_site_complete ansible-site
 compdef _ansible_sites_foreach_complete sites-foreach
 
+alias ahost=ansible-host
 alias adeploy=ansible-deploy
 alias arole=ansible-role
 alias asite=ansible-site
