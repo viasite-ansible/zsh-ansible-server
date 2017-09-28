@@ -180,3 +180,4 @@ alias adeploy=ansible-deploy
 alias arole=ansible-role
 alias asite=ansible-site
 alias aforeach=sites-foreach
+alias ashell=ansible-shell
