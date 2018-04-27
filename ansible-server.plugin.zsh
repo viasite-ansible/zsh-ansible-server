@@ -23,6 +23,10 @@ __as_ll_group_list () {
     echo ${group_list}
 }
 
+__as_asite_tags_list () {
+    _values  -s , apache cron dns letsencrypt nginx php ssh-keys sync sync_files sync_mysql
+}
+
 __as_host_list ()
 {
     # parses the ini hostfile for hosts only
@@ -59,14 +63,15 @@ __as_group_list ()
 }
 
 # completion of playbooks/hosts/*
-_ansible_hosts_complete () {
+_ansible_host_complete () {
     _arguments -C \
     "1:first_arg:->hosts" \
+    "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
 
     case "$state" in
         hosts)
             local -a results
-            _message -r "$(__as_not_found_msg)"
+            #_message -r "$(__as_not_found_msg)" # always show
             local playbooks_path="${ANSIBLE_SERVER_PATH}/playbooks/hosts"
             if [ -d "$playbooks_path" ]; then
                 local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
@@ -82,7 +87,8 @@ _ansible_hosts_complete () {
 _ansible_deploy_complete () {
     _arguments -C \
     "1:first_arg:->deploy" \
-    "(-l --limit)"{-l,--limit}"[SUBSET further limit selected hosts to an additional pattern]:subset pattern:->pattern"\
+    "--limit[limit selected hosts to hosts/groups]:subset pattern:->pattern" \
+    "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
 
     case "$state" in
         pattern)
@@ -107,7 +113,8 @@ _ansible_deploy_complete () {
 _ansible_role_complete () {
     _arguments -C \
     "1:first_arg:->roles" \
-    "(-l --limit)"{-l,--limit}"[SUBSET further limit selected hosts to an additional pattern]:subset pattern:->pattern"\
+    "--limit[limit selected hosts to hosts/groups]:subset pattern:->pattern" \
+    "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
 
     case "$state" in
         pattern)
@@ -130,9 +137,17 @@ _ansible_role_complete () {
 
 _ansible_site_complete () {
     _arguments -C \
-    "1:first_arg:->sites"
+    "1:first_arg:->sites" \
+    "--tags[SUBSET tags to an additional pattern]:subset pattern:->pattern" \
+    "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    '--force[force files and mysql or --extra-vars="site_sync_files_force=yes site_sync_mysql_force=yes"]' \
+    '--force-files[force files or --extra-vars="site_sync_files_force=yes"]' \
+    '--force-mysql[force mysql or --extra-vars="site_sync_mysql_force=yes"]'
 
     case "$state" in
+        pattern)
+            _arguments '*:feature:__as_asite_tags_list'
+            ;;
         sites)
             local -a results
             local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/sites/hosts"
@@ -140,10 +155,22 @@ _ansible_site_complete () {
                 local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
                 results=( $(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g') )
                 _values 'results' $results
-                _multi_parts -i / results
+                #_multi_parts -i / results # buggy
             else
                 _message -r "$(__as_not_found_msg)"
             fi
+            ;;
+    esac
+}
+
+_ansible_shell_complete () {
+    _arguments -C \
+        '(-): :->limit' \
+
+    case "$state" in
+        (limit)
+            _arguments '*:feature:__as_host_list'
+            _arguments '*:feature:__as_group_list'
             ;;
     esac
 }
@@ -161,7 +188,7 @@ _ansible_sites_foreach_complete () {
                 results=( $(find "$playbooks_path" -type d -mindepth 2 | sed "s/$playbooks_path_sed//g") )
                 _values 'results' $results
                 _values 'results' all
-                _multi_parts -i / results
+                #_multi_parts -i / results # buggy
             else
                 _message -r "$(__as_not_found_msg)"
             fi
@@ -169,15 +196,50 @@ _ansible_sites_foreach_complete () {
     esac
 }
 
-compdef _ansible_hosts_complete ansible-host
+_ansible_server_complete () {
+    _arguments -C \
+        '(-): :->command' \
+        '(-)*:: :->option-or-argument'
+
+    case "$state" in
+        (command)
+            _values 'results' role deploy host site
+            ;;
+        (option-or-argument)
+            curcontext=${curcontext%:*:*}:ansible-server-$words[1]:
+            _ansible_server_subcommand
+            ;;
+    esac
+}
+
+_ansible_server_subcommand () {
+    case "$words[1]" in
+        (role)
+            _ansible_role_complete
+            ;;
+        (deploy)
+            _ansible_deploy_complete
+            ;;
+        (host)
+            _ansible_host_complete
+            ;;
+        (site)
+            _ansible_site_complete
+            ;;
+    esac
+}
+
+compdef _ansible_server_complete ansible-server
+compdef _ansible_host_complete ansible-host
 compdef _ansible_deploy_complete ansible-deploy
 compdef _ansible_role_complete ansible-role
 compdef _ansible_site_complete ansible-site
+compdef _ansible_shell_complete ansible-shell
 compdef _ansible_sites_foreach_complete sites-foreach
 
-alias ahost=ansible-host
-alias adeploy=ansible-deploy
-alias arole=ansible-role
-alias asite=ansible-site
+alias ahost='ansible-server host'
+alias adeploy='ansible-server deploy'
+alias arole='ansible-server role'
+alias asite='ansible-server site'
 alias aforeach=sites-foreach
 alias ashell=ansible-shell
