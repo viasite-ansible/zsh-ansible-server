@@ -185,7 +185,7 @@ _ansible_sites_foreach_complete () {
             local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/sites/hosts"
             if [ -d "$playbooks_path" ]; then
                 local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
-                results=( $(find "$playbooks_path" -type d -mindepth 2 | sed "s/$playbooks_path_sed//g") )
+                results=( $(find "$playbooks_path" -type d -mindepth 1 | grep -v '_examples' | sed "s/$playbooks_path_sed//g") )
                 _values 'results' $results
                 _values 'results' all
                 #_multi_parts -i / results # buggy
