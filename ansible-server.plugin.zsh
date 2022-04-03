@@ -71,6 +71,7 @@ _ansible_host_complete () {
     _arguments -C \
     "1:first_arg:->hosts" \
     "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    "--check[dry-run]" \
 
     case "$state" in
         hosts)
@@ -93,6 +94,7 @@ _ansible_deploy_complete () {
     "1:first_arg:->deploy" \
     "--limit[limit selected hosts to hosts/groups]:subset pattern:->pattern" \
     "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    "--check[dry-run]" \
 
     case "$state" in
         pattern)
@@ -119,6 +121,8 @@ _ansible_role_complete () {
     "1:first_arg:->roles" \
     "--limit[limit selected hosts to hosts/groups]:subset pattern:->pattern" \
     "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    "--check[dry-run]" \
+    "--fast[do not check tags]" \
 
     case "$state" in
         pattern)
@@ -144,6 +148,8 @@ _ansible_site_complete () {
     "1:first_arg:->sites" \
     "--tags[SUBSET tags to an additional pattern]:subset pattern:->pattern" \
     "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    "--check[dry-run]" \
+    "--fast[do not check tags]" \
     '--force[force files and mysql or --extra-vars="site_sync_files_force=yes site_sync_mysql_force=yes"]' \
     '--force-files[force files or --extra-vars="site_sync_files_force=yes"]' \
     '--force-mysql[force mysql or --extra-vars="site_sync_mysql_force=yes"]'
@@ -174,6 +180,7 @@ _ansible_project_complete () {
     "--tags[SUBSET tags to an additional pattern]:subset pattern:->pattern" \
     "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
     "--check[dry-run]" \
+    "--fast[do not check tags]" \
 
     case "$state" in
         pattern)
