@@ -27,6 +27,10 @@ __as_asite_tags_list () {
     _values  -s , apache cron dns letsencrypt nginx php ssh-keys sync sync_files sync_mysql
 }
 
+__as_aproject_tags_list () {
+    _values  -s , cron dns ssl nginx ssh-keys docker deploy config
+}
+
 __as_host_list ()
 {
     # parses the ini hostfile for hosts only
@@ -151,11 +155,38 @@ _ansible_site_complete () {
         sites)
             local -a results
             local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/sites/hosts"
+            # echo "playbooks_path: $playbooks_path"
             if [ -d "$playbooks_path" ]; then
                 local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
                 results=( $(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g') )
                 _values 'results' $results
                 #_multi_parts -i / results # buggy
+            else
+                _message -r "$(__as_not_found_msg)"
+            fi
+            ;;
+    esac
+}
+
+_ansible_project_complete () {
+    _arguments -C \
+    "1:first_arg:->projects" \
+    "--tags[SUBSET tags to an additional pattern]:subset pattern:->pattern" \
+    "--changed[only changed or ANSIBLE_STDOUT_CALLBACK=actionable]" \
+    "--check[dry-run]" \
+
+    case "$state" in
+        pattern)
+            _arguments '*:feature:__as_aproject_tags_list'
+            ;;
+        projects)
+            local -a results
+            local playbooks_path="${ANSIBLE_SERVER_PATH}/vars/projects/hosts"
+            if [ -d "$playbooks_path" ]; then
+                local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
+                results=( $(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g') )
+                #_values  'results' $results
+                _multi_parts -i / results # buggy
             else
                 _message -r "$(__as_not_found_msg)"
             fi
@@ -223,6 +254,9 @@ _ansible_server_subcommand () {
         (host)
             _ansible_host_complete
             ;;
+        (project)
+            _ansible_project_complete
+            ;;
         (site)
             _ansible_site_complete
             ;;
@@ -232,6 +266,7 @@ _ansible_server_subcommand () {
 compdef _ansible_server_complete ansible-server
 compdef _ansible_host_complete ansible-host
 compdef _ansible_deploy_complete ansible-deploy
+compdef _ansible_project_complete ansible-project
 compdef _ansible_role_complete ansible-role
 compdef _ansible_site_complete ansible-site
 compdef _ansible_shell_complete ansible-shell
@@ -239,6 +274,7 @@ compdef _ansible_sites_foreach_complete sites-foreach
 
 alias ahost='ansible-server host'
 alias adeploy='ansible-server deploy'
+alias aproject='ansible-server project'
 alias arole='ansible-server role'
 alias asite='ansible-server site'
 alias aforeach=sites-foreach
