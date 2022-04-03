@@ -80,7 +80,7 @@ _ansible_host_complete () {
             local playbooks_path="${ANSIBLE_SERVER_PATH}/playbooks/hosts"
             if [ -d "$playbooks_path" ]; then
                 local playbooks_path_sed="$(echo "$playbooks_path/" | sed 's|\/|\\\/|g')"
-                results=( $(find "$playbooks_path" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g') )
+                results=( $(find "$playbooks_path/" -name '*.yml' | sed "s/$playbooks_path_sed//g" | sed 's/\.yml$//g' | sort) )
                 _values 'results' $results
             else
                 _message -r "$(__as_not_found_msg)"
